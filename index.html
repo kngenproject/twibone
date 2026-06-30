@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twibbon MPLS PAUD IT Ash Shiddiqy</title>
     
-    <!-- Favicon Ceria (Ikon Balon di Tab Browser) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
 
     <style>
-        /* Gaya Tampilan Dasar & Efek Bubble */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -28,7 +26,6 @@
             position: relative;
         }
 
-        /* Container untuk Bubbles */
         .bubble-container {
             position: fixed;
             top: 0;
@@ -48,37 +45,31 @@
             animation: floatUp 8s infinite linear;
         }
         @keyframes floatUp {
-            0% {
-                transform: translateY(0) translateX(0) scale(0.5);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
             10% { opacity: 0.8; }
             90% { opacity: 0.8; }
-            100% {
-                transform: translateY(-110vh) translateX(50px) scale(1.2);
-                opacity: 0;
-            }
+            100% { transform: translateY(-110vh) translateX(50px) scale(1.2); opacity: 0; }
         }
 
-        /* Kartu Utama Berwarna Ceria */
+        /* Card glassmorphism - kaca buram, bukan putih solid */
         .card {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             padding: 30px;
             border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 20px 40px rgba(31, 41, 55, 0.15);
             text-align: center;
             max-width: 450px;
             width: 100%;
-            border: 6px dashed #fcd34d;
+            border: 2px solid rgba(255, 255, 255, 0.5);
             position: relative;
             z-index: 10;
         }
         
-        /* Dekorasi Emoji Mainan */
         .card::before { content: '🎈'; position: absolute; top: -20px; left: -10px; font-size: 35px; }
         .card::after { content: '🧸'; position: absolute; bottom: -10px; right: -10px; font-size: 35px; }
 
-        /* Judul dan Identitas Sekolah */
         .header-tag {
             background-color: #f43f5e;
             color: white;
@@ -94,28 +85,28 @@
         h2 {
             font-size: 32px;
             color: #2563eb;
-            text-shadow: 2px 2px 0px #bfdbfe;
+            text-shadow: 2px 2px 0px rgba(191, 219, 254, 0.7);
             margin-bottom: 4px;
         }
         .sub-school {
             font-size: 20px;
             color: #059669;
             font-weight: bold;
-            text-shadow: 1px 1px 0px #a7f3d0;
+            text-shadow: 1px 1px 0px rgba(167, 243, 208, 0.7);
         }
         .sub-info {
             font-size: 14px;
-            color: #4b5563;
+            color: #374151;
             margin-top: 4px;
             margin-bottom: 24px;
             font-weight: bold;
-            background: #f3f4f6;
+            background: rgba(255, 255, 255, 0.4);
             display: inline-block;
             padding: 4px 12px;
             border-radius: 10px;
         }
         
-        /* Bingkai Pratinjau Canvas */
+        /* Bingkai canvas: border gradient pelangi animasi, tengah putih solid */
         .canvas-wrapper {
             position: relative;
             width: 100%;
@@ -124,11 +115,19 @@
             margin: 0 auto 24px auto;
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             cursor: move;
             touch-action: none;
-            border: 4px solid #38bdf8;
+            border: 5px solid transparent;
+            background:
+                linear-gradient(#ffffff, #ffffff) padding-box,
+                linear-gradient(135deg, #f43f5e, #fbbf24, #34d399, #38bdf8, #a78bfa) border-box;
+            animation: rainbowSpin 6s linear infinite;
+            background-size: 200% 200%;
+        }
+        @keyframes rainbowSpin {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 200%; }
         }
         canvas {
             width: 100%;
@@ -136,7 +135,6 @@
             display: block;
         }
         
-        /* Tombol Upload (Kuning Emas) */
         .upload-label {
             display: inline-block;
             background: #fbbf24;
@@ -154,7 +152,6 @@
         .upload-label:active { transform: translateY(3px); box-shadow: 0 2px 0 #d97706; }
         input[type="file"] { display: none; }
 
-        /* Slider Kontrol */
         .controls {
             display: flex;
             flex-direction: column;
@@ -176,7 +173,6 @@
             border-radius: 5px;
         }
 
-        /* Tombol Unduh Hasil (Biru Ceria) */
         .btn-download {
             background: #3b82f6;
             color: white;
@@ -203,63 +199,49 @@
 </head>
 <body>
 
-<!-- Efek Bubble di Latar Belakang -->
 <div class="bubble-container" id="bubbleContainer"></div>
 
 <div class="card">
-    <!-- Identitas Ceria PAUD -->
     <span class="header-tag">✨ Selamat Datang ✨</span>
     <h2>MPLS</h2>
     <div class="sub-school">PAUD IT ASH SHIDDIQY</div>
     <div class="sub-info">MARGOYOSO • TP 2026-2027</div>
     
-    <!-- Tombol Upload -->
     <label for="uploadFoto" class="upload-label">📸 Pilih Foto Ananda</label>
     <input type="file" id="uploadFoto" accept="image/*">
 
-    <!-- Area Pratinjau Bingkai + Foto -->
     <div class="canvas-wrapper" id="canvasContainer">
         <canvas id="twibbonCanvas" width="1000" height="1000"></canvas>
     </div>
 
-    <!-- Kontrol Zoom -->
     <div class="controls">
         <span class="slider-label">🔍 Geser untuk Atur Ukuran Foto</span>
         <input type="range" id="zoomSlider" class="slider" min="10" max="300" value="100" disabled>
     </div>
 
-    <!-- Tombol Download -->
-    <button class="btn-download" id="downloadBtn" disabled>💾 Unduh Twibbon</button>
+    <button class="btn-download" id="downloadBtn" disabled>Unduh Twibbon</button>
 </div>
 
 <script>
-    // Generator Bubble Otomatis
     const bubbleContainer = document.getElementById('bubbleContainer');
     const bubbleColors = ['#fecdd3', '#ccfbf1', '#e0f2fe', '#fef08a', '#e9d5ff'];
     
     function createBubble() {
         const bubble = document.createElement('div');
         bubble.classList.add('bubble');
-        
         const size = Math.random() * 40 + 20 + 'px';
         bubble.style.width = size;
         bubble.style.height = size;
-        
         bubble.style.left = Math.random() * 100 + 'vw';
         bubble.style.animationDuration = Math.random() * 5 + 6 + 's';
         bubble.style.borderColor = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
-        
         bubbleContainer.appendChild(bubble);
-        
-        setTimeout(() => {
-            bubble.remove();
-        }, 11000);
+        setTimeout(() => { bubble.remove(); }, 11000);
     }
     
     setInterval(createBubble, 1500);
     for(let i=0; i<10; i++) { setTimeout(createBubble, Math.random() * 5000); }
 
-    // --- Logika Twibbon (Canvas API) ---
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
     const uploadInput = document.getElementById('uploadFoto');
@@ -267,7 +249,6 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const container = document.getElementById('canvasContainer');
 
-    // Menuju langsung ke file bingkai.png di repositori yang sama
     const URL_TEMPLATE_TWIBBON = 'bingkai.png'; 
 
     let templateImg = new Image();
@@ -281,14 +262,12 @@
     let isDragging = false;
     let startX, startY;
 
-    // Load Bingkai Pertama Kali
     templateImg.src = URL_TEMPLATE_TWIBBON;
     templateImg.onload = () => { drawCanvas(); };
     templateImg.onerror = () => {
         alert("Gagal memuat 'bingkai.png'. Pastikan file bingkai berada di folder yang sama dengan file HTML ini.");
     };
 
-    // Proses Unggah Foto
     uploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -300,10 +279,8 @@
                     baseScale = Math.max(canvas.width / userImg.width, canvas.height / userImg.height);
                     zoomSlider.value = 100;
                     imgScale = baseScale;
-                    
                     imgX = canvas.width / 2;
                     imgY = canvas.height / 2;
-
                     zoomSlider.disabled = false;
                     downloadBtn.disabled = false;
                     drawCanvas();
@@ -313,34 +290,28 @@
         }
     });
 
-    // Menggambar Objek ke Canvas
     function drawCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Lapisan Belakang: Foto Pengguna (Jika Ada)
         if (isUserImgLoaded) {
             ctx.save();
             ctx.translate(imgX, imgY);
             ctx.drawImage(userImg, - (userImg.width * imgScale) / 2, - (userImg.height * imgScale) / 2, userImg.width * imgScale, userImg.height * imgScale);
             ctx.restore();
         } else {
-            // Latar belakang putih kosong sebelum ada foto
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Lapisan Depan: Bingkai PNG Anda
         ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
     }
 
-    // Slider Perbesar / Perkecil
     zoomSlider.addEventListener('input', (e) => {
         if (!isUserImgLoaded) return;
         imgScale = baseScale * (e.target.value / 100);
         drawCanvas();
     });
 
-    // Deteksi Geser (Drag) lewat Sentuhan/Mouse
     function getEventPos(e) {
         const rect = container.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -377,7 +348,6 @@
     window.addEventListener('touchmove', moveDrag);
     window.addEventListener('touchend', stopDrag);
 
-    // Proses Unduh Hasil Akhir
     downloadBtn.addEventListener('click', () => {
         const link = document.createElement('a');
         link.download = 'MPLS_PAUD_IT_AshShiddiqy.png';
