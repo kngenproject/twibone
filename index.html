@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twibbon Generator</title>
+    <style>
+        /* Gaya Tampilan (CSS) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+        p {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+        
+        /* Area Canvas / Pratinjau Twibbon */
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 340px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto 24px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #e5e7eb;
+            cursor: move; /* Menandakan foto bisa digeser */
+            touch-action: none; /* Mencegah layar HP ikut tergulung saat menggeser foto */
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* Tombol Batalkan / Pilih File */
+        .upload-label {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        .upload-label:hover { background: #4338ca; }
+        .upload-label:active { transform: scale(0.98); }
+        input[type="file"] { display: none; }
+
+        /* Slider Kontrol */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        .slider-label {
+            font-size: 13px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .slider {
+            width: 80%;
+            max-width: 250px;
+            accent-color: #4f46e5;
+            cursor: pointer;
+        }
+
+        /* Tombol Unduh */
+        .btn-download {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .btn-download:hover { background: #059669; }
+        .btn-download:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Twibbon Generator</h2>
+    <p>Pilih foto Anda, atur posisinya dengan digeser/di-zoom, lalu unduh hasilnya.</p>
+    
+    <!-- Tombol Upload -->
+    <label for="uploadFoto" class="upload-label">📸 Pilih Foto Anda</label>
+    <input type="file" id="uploadFoto" accept="image/*">
+
+    <!-- Area Pratinjau Bingkai + Foto -->
+    <div class="canvas-wrapper" id="canvasContainer">
+        <!-- Resolusi internal sengaja diset 1000x1000 agar hasil unduhan tetap tajam/HD -->
+        <canvas id="twibbonCanvas" width="1000" height="1000"></canvas>
+    </div>
+
+    <!-- Kontrol Zoom -->
+    <div class="controls">
+        <span class="slider-label">Atur Ukuran Foto</span>
+        <input type="range" id="zoomSlider" class="slider" min="10" max="300" value="100" disabled>
+    </div>
+
+    <!-- Tombol Download -->
+    <button class="btn-download" id="downloadBtn" disabled>Unduh Twibbon</button>
+</div>
+
+<script>
+    // Logika Pemrosesan Gambar (JavaScript)
+    const canvas = document.getElementById('twibbonCanvas');
+    const ctx = canvas.getContext('2d');
+    const uploadInput = document.getElementById('uploadFoto');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const container = document.getElementById('canvasContainer');
+
+    // Mengambil file bingkai.png yang berada di folder yang sama
+    const URL_TEMPLATE_TWIBBON = 'bingkai.png'; 
+
+    let templateImg = new Image();
+    let userImg = new Image();
+    
+    let isUserImgLoaded = false;
+    let imgX = 500, imgY = 500; // Berangkat dari titik tengah canvas (1000 / 2)
+    let imgScale = 1;
+    let baseScale = 1;
+
+    // Variabel Deteksi Geser (Drag)
+    let isDragging = false;
+    let startX, startY;
+
+    // 1. Muat Template Bingkai saat halaman dibuka
+    templateImg.src = URL_TEMPLATE_TWIBBON;
+    templateImg.onload = () => {
+        drawCanvas();
+    };
+    templateImg.onerror = () => {
+        alert("Gagal memuat file 'bingkai.png'. Pastikan file bingkai berada di folder yang sama dengan nama yang benar.");
+    };
+
+    // 2. Handle Upload Foto Pengguna
+    uploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                userImg.src = event.target.result;
+                userImg.onload = () => {
+                    isUserImgLoaded = true;
+                    
+                    // Kalkulasi skala default agar foto langsung menutupi area canvas
+                    baseScale = Math.max(canvas.width / userImg.width, canvas.height / userImg.height);
+                    zoomSlider.value = 100;
+                    imgScale = baseScale;
+                    
+                    // Posisikan foto tepat di tengah area canvas
+                    imgX = canvas.width / 2;
+                    imgY = canvas.height / 2;
+
+                    zoomSlider.disabled = false;
+                    downloadBtn.disabled = false;
+                    drawCanvas();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 3. Fungsi Utama Menggambar Ulang Canvas
+    function drawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Lapisan 1: Gambar Foto Pengguna (Di Belakang)
+        if (isUserImgLoaded) {
+            ctx.save();
+            ctx.translate(imgX, imgY);
+            ctx.drawImage(
+                userImg, 
+                - (userImg.width * imgScale) / 2, 
+                - (userImg.height * imgScale) / 2, 
+                userImg.width * imgScale, 
+                userImg.height * imgScale
+            );
+            ctx.restore();
+        } else {
+            // Tampilan latar belakang bawaan sebelum ada foto
+            ctx.fillStyle = "#e5e7eb";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#9ca3af";
+            ctx.font = "bold 40px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Pratinjau Twibbon", canvas.width / 2, canvas.height / 2);
+        }
+
+        // Lapisan 2: Gambar Bingkai Twibbon (Di Depan)
+        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+    }
+
+    // 4. Fitur Zoom (Slider)
+    zoomSlider.addEventListener('input', (e) => {
+        if (!isUserImgLoaded) return;
+        const sliderValue = e.target.value / 100;
+        imgScale = baseScale * sliderValue;
+        drawCanvas();
+    });
+
+    // 5. Fitur Geser Menggunakan Mouse / Sentuhan (Drag & Drop)
+    function getEventPos(e) {
+        const rect = container.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: (clientX - rect.left) * (canvas.width / rect.width),
+            y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    function startDrag(e) {
+        if (!isUserImgLoaded) return;
+        isDragging = true;
+        const pos = getEventPos(e);
+        startX = pos.x - imgX;
+        startY = pos.y - imgY;
+    }
+
+    function moveDrag(e) {
+        if (!isDragging) return;
+        const pos = getEventPos(e);
+        imgX = pos.x - startX;
+        imgY = pos.y - startY;
+        drawCanvas();
+    }
+
+    function stopDrag() { isDragging = false; }
+
+    // Event Listener Mouse
+    container.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    // Event Listener Touchscreen (HP)
+    container.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', moveDrag);
+    window.addEventListener('touchend', stopDrag);
+
+    // 6. Fungsi Unduh Hasil Akhir
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'twibbon_hasil.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+</script>
+
+</body>
+</html>
