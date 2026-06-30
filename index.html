@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twibbon MPLS PAUD IT Ash Shiddiqy</title>
+    
+    <!-- Favicon Ceria (Ikon Balon di Tab Browser) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
+
     <style>
         /* Gaya Tampilan Dasar & Efek Bubble */
         * {
@@ -65,7 +69,7 @@
             text-align: center;
             max-width: 450px;
             width: 100%;
-            border: 6px dashed #fcd34d; /* Garis putus-putus lucu */
+            border: 6px dashed #fcd34d;
             position: relative;
             z-index: 10;
         }
@@ -229,7 +233,7 @@
 </div>
 
 <script>
-    // Generator Bubble Otomatis via JS
+    // Generator Bubble Otomatis
     const bubbleContainer = document.getElementById('bubbleContainer');
     const bubbleColors = ['#fecdd3', '#ccfbf1', '#e0f2fe', '#fef08a', '#e9d5ff'];
     
@@ -263,6 +267,7 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const container = document.getElementById('canvasContainer');
 
+    // Menuju langsung ke file bingkai.png di repositori yang sama
     const URL_TEMPLATE_TWIBBON = 'bingkai.png'; 
 
     let templateImg = new Image();
@@ -276,14 +281,14 @@
     let isDragging = false;
     let startX, startY;
 
-    // Load Bingkai
+    // Load Bingkai Pertama Kali
     templateImg.src = URL_TEMPLATE_TWIBBON;
     templateImg.onload = () => { drawCanvas(); };
     templateImg.onerror = () => {
-        alert("Gagal memuat 'bingkai.png'. Letakkan file gambar bingkai Anda di folder yang sama.");
+        alert("Gagal memuat 'bingkai.png'. Pastikan file bingkai berada di folder yang sama dengan file HTML ini.");
     };
 
-    // Upload Foto
+    // Proses Unggah Foto
     uploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -308,33 +313,34 @@
         }
     });
 
+    // Menggambar Objek ke Canvas
     function drawCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Foto Murid (Lapisan Belakang)
+        // Lapisan Belakang: Foto Pengguna (Jika Ada)
         if (isUserImgLoaded) {
             ctx.save();
             ctx.translate(imgX, imgY);
             ctx.drawImage(userImg, - (userImg.width * imgScale) / 2, - (userImg.height * imgScale) / 2, userImg.width * imgScale, userImg.height * imgScale);
             ctx.restore();
         } else {
-            // Latar belakang putih bersih sebelum upload foto
+            // Latar belakang putih kosong sebelum ada foto
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Bingkai Twibbon (Lapisan Depan)
+        // Lapisan Depan: Bingkai PNG Anda
         ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
     }
 
-    // Slider Zoom
+    // Slider Perbesar / Perkecil
     zoomSlider.addEventListener('input', (e) => {
         if (!isUserImgLoaded) return;
         imgScale = baseScale * (e.target.value / 100);
         drawCanvas();
     });
 
-    // Kontrol Geser Foto (Mouse & Sentuhan)
+    // Deteksi Geser (Drag) lewat Sentuhan/Mouse
     function getEventPos(e) {
         const rect = container.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -371,7 +377,7 @@
     window.addEventListener('touchmove', moveDrag);
     window.addEventListener('touchend', stopDrag);
 
-    // Download
+    // Proses Unduh Hasil Akhir
     downloadBtn.addEventListener('click', () => {
         const link = document.createElement('a');
         link.download = 'MPLS_PAUD_IT_AshShiddiqy.png';
